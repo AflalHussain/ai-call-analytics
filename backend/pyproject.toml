@@ -1,0 +1,19 @@
+[project]
+name = "call-agent-dashboard"
+version = "0.1.0"
+description = "Analytics dashboard backend for the AI customer call handling agent"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "asyncpg>=0.30",
+    "pydantic>=2.9",
+    "httpx>=0.27",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
