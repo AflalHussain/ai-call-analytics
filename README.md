@@ -53,6 +53,8 @@ docker compose exec backend python scripts/generate_seed.py --reset
 
 ```bash
 docker compose exec backend python scripts/seed_live_call.py --scenario tamil
+docker compose exec backend python scripts/seed_live_call.py --scenario  happy
+docker compose exec backend python scripts/seed_live_call.py --scenario angry
 docker compose exec backend python scripts/trigger_alert.py --district Kandy --intent mobile_coverage
 ```
 
