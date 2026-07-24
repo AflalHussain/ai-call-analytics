@@ -89,15 +89,11 @@ async def store(calls: list[CallRecord], broadcast: bool = True) -> int:
     if not calls:
         return 0
 
-    import json as _json
-
-    rows = []
-    for c in calls:
-        r = list(_row(c))
-        # actions_taken is jsonb — encode explicitly since executemany bypasses
-        # the connection-level codec for parameter encoding of nested types.
-        r[18] = _json.dumps(r[18])
-        rows.append(tuple(r))
+    # actions_taken (param 19, a list[dict]) is encoded by the connection-level
+    # jsonb codec — which applies to executemany too. Pre-stringifying it here
+    # would double-encode (codec dumps the already-dumped string), storing a
+    # jsonb *string* instead of a jsonb array. Pass the list through as-is.
+    rows = [_row(c) for c in calls]
 
     async with db.pool().acquire() as conn:
         await conn.executemany(_UPSERT, rows)

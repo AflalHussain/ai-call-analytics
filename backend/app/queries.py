@@ -42,7 +42,6 @@ async def kpis(frm: datetime, to: datetime) -> dict[str, Any]:
             count(*) FILTER (WHERE {_AFTER_HOURS} AND c.handled_by = 'ai')
                                                                        AS after_hours_handled,
             avg(c.duration_sec) FILTER (WHERE c.handled_by = 'ai')     AS avg_ai_duration_sec,
-            coalesce(sum(c.ai_handling_sec), 0)                        AS total_ai_sec,
             avg(c.csat_predicted)                                      AS avg_csat,
             avg(c.sentiment_end)                                       AS avg_sentiment_end,
             avg(c.sentiment_end - c.sentiment_start)                   AS avg_sentiment_delta,
@@ -59,17 +58,9 @@ async def kpis(frm: datetime, to: datetime) -> dict[str, Any]:
 
     total = row["total_calls"] or 0
     ai = row["ai_handled"] or 0
-    baseline_aht = row["human_baseline_aht_sec"]
-    cost_per_hour = float(row["agent_cost_per_hour_lkr"])
 
     containment_pct = (ai / total * 100) if total else 0.0
     abandon_pct = ((row["abandoned"] or 0) / total * 100) if total else 0.0
-
-    # Agent-hours saved: every second the AI held the call is a second a human
-    # did not. Deliberately conservative — we do NOT also claim the queue time
-    # saved, because that is harder to defend if challenged.
-    agent_hours_saved = (row["total_ai_sec"] or 0) / 3600
-    lkr_saved = agent_hours_saved * cost_per_hour
 
     return {
         "range": {"from": frm.isoformat(), "to": to.isoformat()},
@@ -81,9 +72,6 @@ async def kpis(frm: datetime, to: datetime) -> dict[str, Any]:
         "containment_pct": round(containment_pct, 1),
         "resolution_pct": round((row["resolved_calls"] or 0) / total * 100, 1) if total else 0.0,
         "avg_ai_duration_sec": round(row["avg_ai_duration_sec"] or 0),
-        "human_baseline_aht_sec": baseline_aht,
-        "agent_hours_saved": round(agent_hours_saved, 1),
-        "lkr_saved": round(lkr_saved),
         "after_hours_calls": row["after_hours_calls"] or 0,
         "after_hours_pct": round((row["after_hours_calls"] or 0) / total * 100, 1) if total else 0.0,
         "after_hours_handled": row["after_hours_handled"] or 0,
@@ -93,14 +81,6 @@ async def kpis(frm: datetime, to: datetime) -> dict[str, Any]:
         "abandon_pct": round(abandon_pct, 1),
         "repeat_caller_pct": round(repeat_pct, 1),
         "churn_flagged": row["churn_flagged"] or 0,
-        "baseline": {
-            "containment_pct": float(row["baseline_containment_pct"]),
-            "abandon_pct": float(row["baseline_abandon_pct"]),
-            "csat": float(row["baseline_csat"]),
-            "aht_sec": baseline_aht,
-        },
-        "currency": row["currency"],
-        "figures_are_client_supplied": row["figures_are_client_supplied"],
     }
 
 

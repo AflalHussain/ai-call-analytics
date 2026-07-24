@@ -29,46 +29,33 @@ export function Card({
 
 /* ------------------------------------------------------------- stat tile -- */
 
-export type DeltaDir = "good" | "bad" | "neutral";
-
 /**
- * Delta is always shown against the client's own baseline, never as a bare
- * absolute. A number with nothing to compare it to invites the question
- * "is that good?" — which is the one question we do not want asked on stage.
+ * An absolute figure with a context line under it. The context line ("N of M
+ * calls", "AI-handled calls") is what keeps a bare number from inviting the
+ * "is that good?" question on stage.
  */
 export function StatTile({
-  label, value, unit, delta, deltaLabel, deltaDir = "neutral", spark, hero, foot,
+  label, value, unit, spark, hero, wide, foot,
 }: {
   label: string;
   value: string | number;
   unit?: string;
-  delta?: number | null;
-  deltaLabel?: string;
-  deltaDir?: DeltaDir;
   spark?: { day: string; v: number }[];
   hero?: boolean;
+  wide?: boolean;
   foot?: ReactNode;
 }) {
   const t = useTokens();
-  const cls = delta == null || delta === 0 ? "flat" : deltaDir === "good" ? "up" : deltaDir === "bad" ? "down" : "flat";
-  const arrow = delta == null || delta === 0 ? "" : delta > 0 ? "▲" : "▼";
   const gid = `sp-${label.replace(/\W/g, "")}`;
 
   return (
-    <div className={`card tile${hero ? " hero" : ""}`}>
+    <div className={`card tile${hero ? " hero" : ""}${wide ? " span-2" : ""}`}>
       <span className="label">{label}</span>
       <div className="value">
         {value}
         {unit && <span className="unit">{unit}</span>}
       </div>
       <div className="foot">
-        {delta != null && (
-          <span className={`delta ${cls}`}>
-            {arrow} {Math.abs(delta).toFixed(1)}
-            {deltaLabel ? "" : "pp"}
-          </span>
-        )}
-        {deltaLabel && <span>{deltaLabel}</span>}
         {foot}
       </div>
       {spark && spark.length > 1 && (

@@ -12,6 +12,7 @@ import { ExecStrip } from "./panels/ExecStrip";
 import { Operations } from "./panels/Operations";
 import { Intelligence } from "./panels/Intelligence";
 import { LiveFeed } from "./panels/LiveFeed";
+import { CallHistory } from "./panels/CallHistory";
 
 const RANGES = [
   { key: "7", label: "7 days" },
@@ -19,9 +20,11 @@ const RANGES = [
   { key: "90", label: "90 days" },
 ] as const;
 
+type View = "overview" | "history";
+
 export default function App() {
+  const [view, setView] = useState<View>("overview");
   const [days, setDays] = useState<string>("30");
-  const [compare, setCompare] = useState(true);
   const [theme, toggleTheme] = useTheme();
   const tokens = useChartTokens(theme);
   const { calls, connected, bump } = useLiveFeed();
@@ -54,6 +57,10 @@ export default function App() {
           <h1>Call Intelligence</h1>
           <span className="sub">AI customer call handling · SLT Mobitel</span>
         </div>
+        <nav className="seg viewnav" role="group" aria-label="View">
+          <button aria-pressed={view === "overview"} onClick={() => setView("overview")}>Overview</button>
+          <button aria-pressed={view === "history"} onClick={() => setView("history")}>Call History</button>
+        </nav>
         <div className="controls">
           <div className="seg" role="group" aria-label="Date range">
             {RANGES.map((r) => (
@@ -66,15 +73,6 @@ export default function App() {
               </button>
             ))}
           </div>
-          <button
-            className="toggle"
-            aria-pressed={compare}
-            onClick={() => setCompare((c) => !c)}
-            title="Show every figure as a delta against the current contact centre"
-          >
-            <span className="dot" />
-            Compare to current contact centre
-          </button>
           <button
             className="icon-btn"
             onClick={toggleTheme}
@@ -95,6 +93,9 @@ export default function App() {
         </div>
       )}
 
+      {view === "history" && <CallHistory range={range} />}
+
+      {view === "overview" && <>
       {/* 1 — Open on what needs attention right now, not on the KPIs. */}
       <section className="section">
         <div className="section-head">
@@ -127,7 +128,7 @@ export default function App() {
           <span className="note">Last {days} days</span>
         </div>
         {kpis.data && timeline.data ? (
-          <ExecStrip kpis={kpis.data} timeline={timeline.data} compare={compare} />
+          <ExecStrip kpis={kpis.data} timeline={timeline.data} />
         ) : (
           <Card><div className="empty">Loading…</div></Card>
         )}
@@ -171,6 +172,7 @@ export default function App() {
           <Card><div className="empty">Loading…</div></Card>
         )}
       </section>
+      </>}
     </div>
     </ChartTokenContext.Provider>
   );

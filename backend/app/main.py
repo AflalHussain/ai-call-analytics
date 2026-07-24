@@ -10,8 +10,10 @@ from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from . import alerts, config, db, events, ingest, queries
-from .models import CallBatch, CallRecord, ConfigPatch
+from fastapi import HTTPException
+
+from . import alerts, calls as calls_mod, config, db, events, ingest, queries
+from .models import CallBatch, CallRecord
 
 DEFAULT_RANGE_DAYS = 30
 
@@ -124,17 +126,43 @@ async def get_alerts():
 
 
 # --------------------------------------------------------------------------
-# Config (the ROI inputs)
+# Call History explorer
+# --------------------------------------------------------------------------
+
+@app.get("/api/calls")
+async def get_calls(
+    frm: str | None = Frm,
+    to: str | None = To,
+    search: str | None = Query(None),
+    outcome: str | None = Query(None),
+    sentiment: str | None = Query(None),
+    language: str | None = Query(None),
+    service: str | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+):
+    return await calls_mod.list_calls(
+        *_range(frm, to),
+        search=search, outcome=outcome, sentiment=sentiment,
+        language=language, service=service, limit=limit, offset=offset,
+    )
+
+
+@app.get("/api/calls/{call_id}")
+async def get_call(call_id: str):
+    detail = await calls_mod.call_detail(call_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="call not found")
+    return detail
+
+
+# --------------------------------------------------------------------------
+# Config (read-only operational settings — business hours, timezone)
 # --------------------------------------------------------------------------
 
 @app.get("/api/config")
 async def get_config():
     return await config.get_config()
-
-
-@app.patch("/api/config")
-async def patch_config(patch: ConfigPatch):
-    return await config.patch_config(patch.model_dump(exclude_none=True))
 
 
 # --------------------------------------------------------------------------

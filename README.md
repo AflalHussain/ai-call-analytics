@@ -62,7 +62,7 @@ runs on a single port and there is no CORS to negotiate on a venue network.
 | # | Section | Who it's for | The line |
 |---|---|---|---|
 | 1 | Needs attention now | Ops + CX | "Your call agent spotted a network incident in Gampaha before a ticket was raised." |
-| 2 | Business impact | CFO | Flip **Compare to current contact centre** on stage — every figure becomes a delta against their own numbers. |
+| 2 | Business impact | CFO | Lead with the **containment rate** and **after-hours coverage** — over half of calls arrive after the centre closes and go unanswered today. Value framed as volume, not an assumed cost rate. |
 | 3 | Operations | Ops | Lead with containment-by-intent. It is deliberately unflattering; volunteering the weakness is what buys credibility. |
 | 4 | Customer intelligence | CX + exec | Churn queue and knowledge gaps — this is the reframe from cost-centre automation to revenue and retention. |
 | 5 | Live call | Everyone | Close here. Someone calls the number; the call lands in the feed within a second and the KPIs move. |
@@ -123,29 +123,6 @@ Two rules for a clean panel on stage:
 
 ---
 
-## ⚠️ Before you quote a savings number
-
-The exec strip currently runs on **placeholder cost inputs** and says so on
-screen. With a CFO in the room, an assumed cost rate will be challenged and the
-number will be lost. Get these three figures from SLT Mobitel and set them:
-
-```bash
-curl -X PATCH localhost:8000/api/config \
-  -H 'Content-Type: application/json' \
-  -d '{"human_baseline_aht_sec": 340,
-       "agent_cost_per_hour_lkr": 850,
-       "baseline_containment_pct": 0,
-       "baseline_abandon_pct": 12.0,
-       "baseline_csat": 3.4,
-       "figures_are_client_supplied": true}'
-```
-
-Setting `figures_are_client_supplied: true` removes the placeholder warning
-banner. Do not set it until the numbers really are theirs — the banner is what
-keeps the claim honest.
-
----
-
 ## Architecture
 
 ```
@@ -171,20 +148,56 @@ backend/app/
   main.py       FastAPI routes, SSE endpoint
   models.py     Pydantic models — the DATA_CONTRACT.md enums are enforced here
   queries.py    all analytics SQL, one function per endpoint
+  calls.py      Call History — list rows, per-call detail, derived key points
   alerts.py     emerging-issue detection (spike + incident correlation)
   ingest.py     idempotent upsert
   events.py     in-process pub/sub for SSE
-  config.py     runtime-editable ROI inputs
+  config.py     read-only operational settings (business hours, timezone)
 backend/scripts/
   generate_seed.py    ~4 weeks of realistic synthetic data
   seed_live_call.py   single call POSTer — the demo safety net
+  trigger_alert.py    fire an emerging-issue alert for a chosen district
 frontend/src/
   theme.css     design tokens (validated palette — see below)
   api.ts        typed fetch + SSE hook
-  panels/       ExecStrip · Operations · Intelligence · LiveFeed
+  panels/       ExecStrip · Operations · Intelligence · LiveFeed · CallHistory
 ```
 
 ---
+
+## Call History explorer
+
+A second view (top-bar toggle: **Overview ↔ Call History**) gives ops a
+searchable, scrollable list of every call, with a slide-in drawer for the detail
+— the per-call transcript-summary that a BA specifically asked for.
+
+- **Columns:** time, customer, service, language, duration, outcome, sentiment,
+  CSAT. *Service* is the reason for calling (the intent label), the same
+  taxonomy used everywhere else on the dashboard — not a coarse product line.
+- **Customer** is a stable reference derived from the hashed MSISDN (`C-04217`),
+  so the *same caller always shows the same ref* — repeat callers are visible —
+  without ever storing or showing a real number. Display label only; the raw
+  MSISDN is never persisted (see `DATA_CONTRACT.md`). This is the answer to the
+  CIO's "what customer data does this hold" question: none that identifies a
+  person.
+- **Filters:** outcome, sentiment, language, service. **Search** matches call ID.
+- **Infinite scroll** via an IntersectionObserver sentinel — pages of 50 over
+  keyset-free offset pagination; fine at demo scale.
+- **The drawer's "Key points" are derived, not stored.** The contract carries no
+  `key_points` field; `app/calls.py` reconstructs the bullets from the structured
+  fields enrichment already provides — reason for calling, the actions the agent
+  took (with ticket refs), the outcome, sentiment movement, retention signals,
+  and any unanswered question. So it works on existing data with no pipeline
+  change and no migration.
+
+Endpoints: `GET /api/calls` (list, filters, pagination) and
+`GET /api/calls/{id}` (drawer detail).
+
+> **Fixed along the way:** `actions_taken` was being double-encoded on ingest
+> (manually `json.dumps`-ed *and* run through the connection's jsonb codec),
+> so it stored as a jsonb *string* instead of an array. Harmless until something
+> read it back — the key-points derivation did. Root-caused in `ingest.store`;
+> re-seed picks up the fix. `jsonb_typeof(actions_taken)` should be `array`.
 
 ## How the emerging-issue detector works
 
@@ -268,9 +281,8 @@ dashboard. It is also a demo asset: with a CIO in the room, it answers "what
 does this system actually collect" without improvisation.
 
 Note what the dashboard **derives** rather than receives (contract §6):
-containment, LKR saved, repeat-caller rate, sentiment delta, alerts. Sending
-those pre-computed would create two sources of truth that will disagree on
-stage.
+containment, repeat-caller rate, sentiment delta, alerts. Sending those
+pre-computed would create two sources of truth that will disagree on stage.
 
 ---
 

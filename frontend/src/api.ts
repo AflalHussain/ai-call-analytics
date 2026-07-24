@@ -10,9 +10,6 @@ export interface Kpis {
   containment_pct: number;
   resolution_pct: number;
   avg_ai_duration_sec: number;
-  human_baseline_aht_sec: number;
-  agent_hours_saved: number;
-  lkr_saved: number;
   after_hours_calls: number;
   after_hours_pct: number;
   after_hours_handled: number;
@@ -22,9 +19,6 @@ export interface Kpis {
   abandon_pct: number;
   repeat_caller_pct: number;
   churn_flagged: number;
-  baseline: { containment_pct: number; abandon_pct: number; csat: number; aht_sec: number };
-  currency: string;
-  figures_are_client_supplied: boolean;
 }
 
 export interface TimelinePoint {
@@ -68,6 +62,33 @@ export interface Alert {
   window_count: number; baseline_mean: number; z_score: number; pct_change: number;
   severity: "critical" | "warning"; headline: string; corroborating: string[];
 }
+export interface CallRow {
+  call_id: string;
+  customer_ref: string;
+  started_at: string;
+  duration_sec: number;
+  service: string;
+  intent: string;
+  district: string | null;
+  language: string;
+  language_code: string;
+  outcome: string;
+  outcome_status: string;
+  sentiment: string;
+  sentiment_status: string;
+  csat: number | null;
+  churn_risk: boolean;
+}
+export interface CallsPage { total: number; calls: CallRow[]; limit: number; offset: number }
+export interface CallDetail {
+  call_id: string; customer_ref: string; short_id: string; started_at: string;
+  duration_sec: number; service: string; district: string | null;
+  customer_segment: string | null; language: string; languages: string[];
+  outcome: string; outcome_status: string; sentiment: string; sentiment_status: string;
+  sentiment_start: number | null; sentiment_end: number | null; csat: number | null;
+  churn_risk: boolean; summary: string; key_points: string[];
+}
+
 export interface LiveCall {
   call_id: string; started_at: string; intent: string; label: string;
   district: string | null; language: string; handled_by: string;
@@ -99,6 +120,33 @@ export function useApi<T>(path: string, range: { from: string; to: string } | nu
   }, [path, range?.from, range?.to, tick]);
 
   return { data, error };
+}
+
+export interface CallFilters {
+  search?: string; outcome?: string; sentiment?: string;
+  language?: string; service?: string;
+}
+
+export async function fetchCalls(
+  range: { from: string; to: string },
+  filters: CallFilters,
+  limit: number,
+  offset: number,
+): Promise<CallsPage> {
+  const p = new URLSearchParams({
+    from: range.from, to: range.to,
+    limit: String(limit), offset: String(offset),
+  });
+  for (const [k, v] of Object.entries(filters)) if (v) p.set(k, v);
+  const r = await fetch(`/api/calls?${p.toString()}`);
+  if (!r.ok) throw new Error(`/api/calls -> ${r.status}`);
+  return r.json();
+}
+
+export async function fetchCallDetail(callId: string): Promise<CallDetail> {
+  const r = await fetch(`/api/calls/${encodeURIComponent(callId)}`);
+  if (!r.ok) throw new Error(`/api/calls/${callId} -> ${r.status}`);
+  return r.json();
 }
 
 export async function patchConfig(patch: Record<string, unknown>) {
@@ -148,12 +196,6 @@ export function useLiveFeed(max = 25) {
 
 export const fmtInt = (n: number) => n.toLocaleString("en-US");
 
-export function fmtMoney(n: number, currency = "LKR") {
-  if (n >= 1_000_000) return `${currency} ${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `${currency} ${(n / 1000).toFixed(0)}K`;
-  return `${currency} ${Math.round(n)}`;
-}
-
 export function fmtDuration(sec: number) {
   const m = Math.floor(sec / 60);
   const s = Math.round(sec % 60);
@@ -173,3 +215,25 @@ export function clockTime(iso: string) {
 }
 
 export const LANG_LABEL: Record<string, string> = { si: "Sinhala", ta: "Tamil", en: "English" };
+
+/** Intent value → label, mirroring backend INTENT_LABELS. Drives the Service filter. */
+export const INTENTS: { value: string; label: string }[] = [
+  { value: "bill_inquiry", label: "Bill inquiry" },
+  { value: "bill_payment", label: "Bill payment" },
+  { value: "reload_topup", label: "Reload / top-up" },
+  { value: "data_package", label: "Data package" },
+  { value: "data_balance", label: "Data balance" },
+  { value: "broadband_fault", label: "Broadband fault" },
+  { value: "broadband_speed", label: "Broadband speed" },
+  { value: "router_wifi", label: "Router / WiFi" },
+  { value: "mobile_coverage", label: "Mobile coverage" },
+  { value: "sim_services", label: "SIM services" },
+  { value: "roaming", label: "Roaming" },
+  { value: "peo_tv", label: "PEO TV" },
+  { value: "new_connection", label: "New connection" },
+  { value: "package_change", label: "Package change" },
+  { value: "disconnection", label: "Disconnection" },
+  { value: "complaint_followup", label: "Complaint follow-up" },
+  { value: "general_info", label: "General info" },
+  { value: "other", label: "Other" },
+];

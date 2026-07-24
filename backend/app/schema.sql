@@ -63,25 +63,28 @@ CREATE INDEX IF NOT EXISTS calls_churn_idx         ON calls (started_at DESC) WH
 CREATE INDEX IF NOT EXISTS calls_topics_gin_idx    ON calls USING GIN (topics);
 
 
--- Runtime-editable ROI inputs. Single row, id = 1.
--- These MUST be replaced with SLT Mobitel's own figures before the demo.
+-- Operational settings. Single row, id = 1. Business hours drive the
+-- "answered outside office hours" KPI; timezone anchors the daily/heatmap
+-- aggregates to Sri Lanka local time.
 CREATE TABLE IF NOT EXISTS config (
     id                       SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-    human_baseline_aht_sec   INTEGER NOT NULL DEFAULT 340,
-    agent_cost_per_hour_lkr  NUMERIC NOT NULL DEFAULT 850,
     business_hours_start     TIME    NOT NULL DEFAULT '08:30',
     business_hours_end       TIME    NOT NULL DEFAULT '17:30',
-    timezone                 TEXT    NOT NULL DEFAULT 'Asia/Colombo',
-    baseline_containment_pct NUMERIC NOT NULL DEFAULT 0,
-    baseline_abandon_pct     NUMERIC NOT NULL DEFAULT 12.0,
-    baseline_csat            NUMERIC NOT NULL DEFAULT 3.4,
-    currency                 TEXT    NOT NULL DEFAULT 'LKR',
-    -- FALSE until SLT Mobitel supplies real numbers. The UI labels every
-    -- derived figure differently depending on this flag.
-    figures_are_client_supplied BOOLEAN NOT NULL DEFAULT FALSE
+    timezone                 TEXT    NOT NULL DEFAULT 'Asia/Colombo'
 );
 
 INSERT INTO config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+-- Drop columns from pre-existing DBs. The baseline_* columns backed the removed
+-- "Compare to current contact centre" toggle; the cost/currency/flag columns
+-- backed the removed "Agent cost avoided" money tile.
+ALTER TABLE config DROP COLUMN IF EXISTS human_baseline_aht_sec;
+ALTER TABLE config DROP COLUMN IF EXISTS baseline_containment_pct;
+ALTER TABLE config DROP COLUMN IF EXISTS baseline_abandon_pct;
+ALTER TABLE config DROP COLUMN IF EXISTS baseline_csat;
+ALTER TABLE config DROP COLUMN IF EXISTS agent_cost_per_hour_lkr;
+ALTER TABLE config DROP COLUMN IF EXISTS currency;
+ALTER TABLE config DROP COLUMN IF EXISTS figures_are_client_supplied;
 
 
 -- Emerging-issue alerts, written by app/alerts.py.

@@ -160,7 +160,6 @@ truth that will disagree on stage.
 
 - Containment rate — `handled_by == "ai"` / total
 - Containment by intent
-- Deflection value / LKR saved — `ai_handling_sec` × configured agent cost rate
 - After-hours coverage — from `started_at` vs. configured business hours
 - Repeat-caller rate — `caller_hash` seen again within 24h
 - Sentiment delta — `sentiment_end - sentiment_start`
@@ -170,19 +169,14 @@ truth that will disagree on stage.
 
 ## 7. Dashboard-side config (not per call)
 
-Set once, drives the ROI numbers:
+Operational settings, set once:
 
 ```jsonc
 {
-  "human_baseline_aht_sec": 340,     // their current avg handling time
-  "agent_cost_per_hour_lkr": 850,    // fully loaded
-  "business_hours": { "start": "08:30", "end": "17:30", "tz": "Asia/Colombo" },
-  "baseline_containment_pct": 0,     // pre-AI, for the before/after toggle
-  "currency": "LKR"
+  "business_hours": { "start": "08:30", "end": "17:30", "tz": "Asia/Colombo" }
 }
 ```
 
-**These numbers must come from SLT Mobitel, not from us.** A savings figure built
-on our assumed cost rate is the fastest way to lose the room. Ask them for the
-real ones before the demo; until then the dashboard shows them as editable and
-labels the figures "based on your inputs".
+Business hours drive the "answered outside office hours" KPI; the timezone
+anchors the daily and heatmap aggregates to Sri Lanka local time. Confirm the
+real business hours with SLT Mobitel so the after-hours figure is accurate.

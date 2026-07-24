@@ -160,14 +160,3 @@ class CallRecord(BaseModel):
 
 class CallBatch(BaseModel):
     calls: list[CallRecord]
-
-
-class ConfigPatch(BaseModel):
-    """Partial update of the ROI inputs. All fields optional."""
-
-    human_baseline_aht_sec: int | None = None
-    agent_cost_per_hour_lkr: float | None = None
-    baseline_containment_pct: float | None = None
-    baseline_abandon_pct: float | None = None
-    baseline_csat: float | None = None
-    figures_are_client_supplied: bool | None = None
