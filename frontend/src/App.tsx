@@ -22,6 +22,10 @@ const RANGES = [
 
 type View = "overview" | "history";
 
+// Frontend-only visibility flags. Backend endpoints and the SSE stream are
+// untouched — flip to true to restore the panel.
+const SHOW_LIVE_FEED = false;
+
 export default function App() {
   const [view, setView] = useState<View>("overview");
   const [days, setDays] = useState<string>("30");
@@ -105,7 +109,7 @@ export default function App() {
           </span>
         </div>
         <div className="grid g-6">
-          <div className="span-4" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className={SHOW_LIVE_FEED ? "span-4" : "span-6"} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {(alerts.data ?? []).slice(0, 3).map((a) => (
               <AlertCard alert={a} key={a.id} />
             ))}
@@ -115,9 +119,11 @@ export default function App() {
               </Card>
             )}
           </div>
-          <div className="span-2">
-            <LiveFeed calls={calls} connected={connected} />
-          </div>
+          {SHOW_LIVE_FEED && (
+            <div className="span-2">
+              <LiveFeed calls={calls} connected={connected} />
+            </div>
+          )}
         </div>
       </section>
 

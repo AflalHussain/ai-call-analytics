@@ -294,6 +294,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
 .span-2 { grid-column: span 2; }
 .span-3 { grid-column: span 3; }
 .span-4 { grid-column: span 4; }
+.span-6 { grid-column: 1 / -1; }  /* full width regardless of column count */
 
 @media (max-width: 1400px) {
   .g-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }

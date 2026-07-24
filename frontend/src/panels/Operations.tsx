@@ -11,6 +11,10 @@ import { useTokens } from "../theme";
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const SEQ = ["--seq-0", "--seq-1", "--seq-2", "--seq-3", "--seq-4", "--seq-5", "--seq-6", "--seq-7"];
 
+// Frontend-only visibility flag. The /api/intents data still carries
+// containment-by-intent — flip to true to restore the chart.
+const SHOW_CONTAINMENT_BY_INTENT = false;
+
 /* ------------------------------------------------------------- heatmap --- */
 
 function VolumeHeatmap({ cells, businessEnd = 17 }: { cells: VolumeCell[]; businessEnd?: number }) {
@@ -144,6 +148,7 @@ export function Operations({
         </div>
       </Card>
 
+      {SHOW_CONTAINMENT_BY_INTENT && (
       <Card
         className="span-3"
         title="Containment by reason for calling"
@@ -204,9 +209,10 @@ export function Operations({
           ]}
         />
       </Card>
+      )}
 
       <Card
-        className="span-2"
+        className={SHOW_CONTAINMENT_BY_INTENT ? "span-2" : "span-3"}
         title="Why customers call"
         sub="Ranked by volume"
       >
@@ -220,7 +226,7 @@ export function Operations({
       </Card>
 
       <Card
-        className="span-1"
+        className={SHOW_CONTAINMENT_BY_INTENT ? "span-1" : "span-3"}
         title="Why we hand off"
         sub="Escalation reasons"
       >
