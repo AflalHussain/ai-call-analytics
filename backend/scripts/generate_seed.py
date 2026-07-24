@@ -518,10 +518,19 @@ async def main() -> None:
     ap.add_argument("--per-day", type=int, default=360)
     ap.add_argument("--seed", type=int, default=20260723)
     ap.add_argument("--reset", action="store_true", help="truncate calls and alerts first")
+    ap.add_argument("--if-empty", action="store_true",
+                    help="seed only when the calls table is empty (used by the Docker entrypoint)")
     args = ap.parse_args()
 
     await db.connect()
     await db.apply_schema()
+
+    if args.if_empty:
+        existing = await db.pool().fetchval("SELECT count(*) FROM calls")
+        if existing:
+            print(f"calls table already has {existing} rows — skipping seed")
+            await db.disconnect()
+            return
 
     if args.reset:
         async with db.pool().acquire() as conn:

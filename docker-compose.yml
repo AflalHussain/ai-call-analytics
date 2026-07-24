@@ -1,21 +1,67 @@
+# Full stack: Postgres + FastAPI backend + nginx-served frontend.
+#
+#   docker compose up --build        → dashboard at http://localhost:8080
+#                                       (API also exposed at http://localhost:8000)
+#
+# On a fresh volume the backend seeds ~4 weeks of demo data before serving; the
+# web container waits until the API is healthy, so the first `up` may take ~30s.
+# See README "Running with Docker".
+
+# Explicit project name so every Docker resource (containers, network, volume)
+# is namespaced call_agent_analytics_* — keeps it clearly separate from the
+# actual call-agent app's own Docker resources. Overrides the default, which
+# would otherwise be the folder name.
+name: call_agent_analytics
+
 services:
   db:
     image: postgres:16-alpine
-    container_name: call_agent_db
+    container_name: call_agent_analytics_db
     environment:
       POSTGRES_USER: callagent
       POSTGRES_PASSWORD: callagent
       POSTGRES_DB: callagent
     ports:
-      # 5433 on the host so we never collide with a local postgres on 5432
+      # 5433 on the host so we never collide with a local postgres on 5432.
+      # Only needed for host-side psql; the services talk over the internal net.
       - "5433:5432"
     volumes:
-      - call_agent_pgdata:/var/lib/postgresql/data
+      - call_agent_analytics_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U callagent -d callagent"]
       interval: 3s
       timeout: 3s
       retries: 20
 
+  backend:
+    build: ./backend
+    container_name: call_agent_analytics_backend
+    environment:
+      DATABASE_URL: postgresql://callagent:callagent@db:5432/callagent
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # Exposed so host scripts work, e.g.
+      #   python backend/scripts/trigger_alert.py --api http://localhost:8000
+      - "8000:8000"
+    healthcheck:
+      # Passes only once seeding is done and uvicorn is serving.
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 60s   # allow time for the one-off seed on a fresh volume
+
+  web:
+    build: ./frontend
+    container_name: call_agent_analytics_web
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
 volumes:
-  call_agent_pgdata:
+  call_agent_analytics_pgdata:

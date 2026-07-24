@@ -14,27 +14,75 @@ buying — it answers the four questions the room will actually ask:
 
 ---
 
-## Quick start
+## Running with Docker (recommended)
 
-Three terminals. Postgres runs on **5433** so it can't collide with a local one.
+One command brings up the whole stack — Postgres, the API, and the built
+frontend behind nginx:
 
 ```bash
-# 1. Database
-docker compose up -d
+docker compose up --build
+```
+
+Then open **http://localhost:8080**.
+
+- On a **fresh volume** the backend seeds ~4 weeks of demo data before it starts
+  serving, and the web container waits until the API is healthy — so the first
+  `up` takes ~30s. Subsequent starts are instant (the seed is skipped when data
+  already exists).
+- The API is also exposed at **http://localhost:8000** so the demo scripts work
+  from the host; nginx proxies `/api` and `/ingest` (SSE included) so the
+  dashboard itself only ever talks to port 8080.
+
+Everything is namespaced **`call_agent_analytics_*`** (project, containers,
+network, volume) to stay clearly separate from the actual call-agent app's own
+Docker resources.
+
+| | |
+|---|---|
+| Dashboard | http://localhost:8080 |
+| API (for scripts) | http://localhost:8000 |
+| Postgres (host psql) | localhost:5433 · `callagent` / `callagent` |
+
+**Re-seed with fresh timestamps (do this on demo morning):**
+
+```bash
+docker compose exec backend python scripts/generate_seed.py --reset
+```
+
+**Run the demo scripts inside the container** (or from the host against :8000):
+
+```bash
+docker compose exec backend python scripts/seed_live_call.py --scenario tamil
+docker compose exec backend python scripts/trigger_alert.py --district Kandy --intent mobile_coverage
+```
+
+**Start clean (wipe the DB volume):** `docker compose down -v && docker compose up --build`
+
+---
+
+## Running without Docker (local dev)
+
+Three terminals. Postgres still runs in a container on **5433**; the backend and
+frontend run on the host for fast reloads.
+
+```bash
+# 1. Database only
+docker compose up -d db
 
 # 2. Backend  (http://localhost:8000)
 cd backend
 python3 -m venv .venv && .venv/bin/pip install -e .
 .venv/bin/python scripts/generate_seed.py --reset      # ~10k calls, ~20s
-.venv/bin/uvicorn app.main:app --port 8000
+DATABASE_URL=postgresql://callagent:callagent@localhost:5433/callagent \
+  .venv/bin/uvicorn app.main:app --port 8000
 
 # 3. Frontend (http://localhost:5173)
 cd frontend
 nvm use && npm install && npm run dev
 ```
 
-Open **http://localhost:5173**. The API is proxied through Vite, so the demo
-runs on a single port and there is no CORS to negotiate on a venue network.
+Open **http://localhost:5173**. The API is proxied through Vite, so dev also
+runs on a single origin with no CORS to negotiate.
 
 ---
 
@@ -144,6 +192,13 @@ Voice agent  ──POST /ingest/call──►  FastAPI  ──►  Postgres
 ### Layout
 
 ```
+docker-compose.yml   db + backend + web (project: call_agent_analytics)
+backend/
+  Dockerfile          Python 3.11 image
+  entrypoint.sh       wait for db → seed-if-empty → serve uvicorn
+frontend/
+  Dockerfile          multi-stage: Node build → nginx serve
+  nginx.conf          serves the SPA, proxies /api + /ingest (SSE-safe)
 backend/app/
   main.py       FastAPI routes, SSE endpoint
   models.py     Pydantic models — the DATA_CONTRACT.md enums are enforced here
