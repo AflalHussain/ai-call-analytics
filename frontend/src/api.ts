@@ -78,12 +78,14 @@ export interface CallRow {
   sentiment_status: string;
   csat: number | null;
   churn_risk: boolean;
+  affected_number: string | null;
 }
 export interface CallsPage { total: number; calls: CallRow[]; limit: number; offset: number }
 export interface CallDetail {
   call_id: string; customer_ref: string; short_id: string; started_at: string;
   duration_sec: number; service: string; district: string | null;
-  customer_segment: string | null; language: string; languages: string[];
+  customer_segment: string | null; affected_number: string | null;
+  language: string; languages: string[];
   outcome: string; outcome_status: string; sentiment: string; sentiment_status: string;
   sentiment_start: number | null; sentiment_end: number | null; csat: number | null;
   churn_risk: boolean; summary: string; key_points: string[];
@@ -212,6 +214,27 @@ export function timeAgo(iso: string) {
 
 export function clockTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
+/**
+ * Mask an affected service number for display: keep the prefix and last 4
+ * digits, hide the middle — `0712345678` → `071 ••• 5678`.
+ *
+ * Data minimisation: the full number is captured, but a dashboard on a shared
+ * screen should never show complete customer MSISDNs. The last 4 digits are
+ * enough for an agent to confirm the line with the customer.
+ */
+export function maskNumber(raw: string | null): string {
+  if (!raw) return "—";
+  const d = raw.replace(/\D/g, "");
+  if (d.length < 7) return raw;
+  return `${d.slice(0, 3)} ••• ${d.slice(-4)}`;
+}
+
+/** "Mobile" for 07x numbers, "Fixed line" otherwise. For a hover/label hint. */
+export function lineType(raw: string | null): string | null {
+  if (!raw) return null;
+  return raw.replace(/\D/g, "").startsWith("07") ? "Mobile" : "Fixed line";
 }
 
 export const LANG_LABEL: Record<string, string> = { si: "Sinhala", ta: "Tamil", en: "English" };

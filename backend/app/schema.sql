@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS calls (
     district              TEXT,
     customer_segment      TEXT,
     channel               TEXT,
+    -- affected service line the caller keyed in (landline/mobile), or NULL for
+    -- account-level calls. Stored in full; the dashboard masks it at render.
+    affected_number       TEXT,
 
     -- subject
     intent                TEXT        NOT NULL,
@@ -50,6 +53,9 @@ CREATE TABLE IF NOT EXISTS calls (
     schema_version        TEXT        NOT NULL DEFAULT '0.1',
     ingested_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Idempotent for databases created before affected_number existed.
+ALTER TABLE calls ADD COLUMN IF NOT EXISTS affected_number TEXT;
 
 CREATE INDEX IF NOT EXISTS calls_started_at_idx    ON calls (started_at DESC);
 CREATE INDEX IF NOT EXISTS calls_intent_idx        ON calls (intent);

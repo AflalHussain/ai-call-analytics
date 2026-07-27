@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app import db, ingest  # noqa: E402
 from app.models import Action, CallRecord  # noqa: E402
+from app.phone import affected_number  # noqa: E402
 
 TZ = ZoneInfo("Asia/Colombo")
 
@@ -384,6 +385,7 @@ def _make_call(
             weights=[52, 26, 18, 4], k=1
         )[0],
         channel="voice_inbound",
+        affected_number=affected_number(intent, district, rng),
         intent=intent,
         sub_intent=None,
         topics=topics,

@@ -24,6 +24,10 @@ One JSON object per completed call. Emitted after post-call enrichment finishes.
   "district": "Gampaha",                   // see §3
   "customer_segment": "prepaid",           // prepaid | postpaid | fixed | enterprise | unknown
   "channel": "voice_inbound",              // voice_inbound | voice_outbound | ivr_deflect
+  "affected_number": "0332248193",         // landline/mobile the caller keyed in as the
+                                           // affected service line; null for account-level
+                                           // calls. This IS the reported number (not the
+                                           // caller's identity) — dashboard masks it on display.
 
   // ---- what the call was about -------------------------------------------
   "intent": "broadband_fault",             // REQUIRED, from taxonomy §2
@@ -70,7 +74,15 @@ One JSON object per completed call. Emitted after post-call enrichment finishes.
 |---|---|---|
 | **Required** | `call_id`, `started_at`, `duration_sec`, `intent`, `language_primary`, `handled_by`, `resolved` | Dashboard breaks without these |
 | **Strongly wanted** | `sentiment_start`, `sentiment_end`, `escalation_reason`, `district`, `ai_handling_sec`, `topics` | Layers 2–3 degrade without these |
-| **Nice to have** | `churn_*`, `upsell_opportunity`, `unanswered_questions`, `actions_taken`, `csat_predicted` | Layer 3 differentiators; render as "—" if absent |
+| **Nice to have** | `churn_*`, `upsell_opportunity`, `unanswered_questions`, `actions_taken`, `csat_predicted`, `affected_number` | Layer 3 differentiators; render as "—" if absent |
+
+> **`affected_number`** — the landline or mobile the AI agent asks the caller to
+> key in when reporting a line-specific fault (broadband, PEO TV, coverage, SIM).
+> Send `null` for account-level calls (billing, general info) where there is no
+> single affected line. It is the *reported service line*, distinct from
+> `caller_hash` (caller identity, always hashed). Send it in full; the dashboard
+> masks it at render (`071 ••• 5678`) so complete numbers never appear on a
+> shared screen — data minimisation is deliberate, not a limitation.
 
 Unknown values: send `null`, never omit the key, never invent a value. `intent` falls back to `"other"` — never to a guess.
 

@@ -129,6 +129,9 @@ class CallRecord(BaseModel):
     district: str | None = None
     customer_segment: CustomerSegment | None = None
     channel: str | None = "voice_inbound"
+    # The landline/mobile the caller keyed in as the affected service line.
+    # Null for account-level calls (billing, general info) — see DATA_CONTRACT §1.
+    affected_number: str | None = None
 
     intent: Intent
     sub_intent: str | None = None

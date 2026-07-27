@@ -42,6 +42,7 @@ import httpx
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.models import DISTRICTS, INTENT_LABELS  # noqa: E402
+from app.phone import affected_number  # noqa: E402
 
 TZ = ZoneInfo("Asia/Colombo")
 
@@ -135,6 +136,7 @@ def build_burst(district: str, intent: str, count: int, rng: random.Random) -> l
             "district": district,
             "customer_segment": rng.choice(["prepaid", "postpaid", "fixed"]),
             "channel": "voice_inbound",
+            "affected_number": affected_number(intent, district, rng),
             "intent": intent,
             "topics": list(prof["topics"]),
             "language_primary": lang,

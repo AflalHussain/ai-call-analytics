@@ -46,6 +46,7 @@ SCENARIOS = {
             {"action": "list_packages", "status": "ok"},
             {"action": "activate_package", "status": "ok"},
         ],
+        "affected_number": None,   # account-level — no single line
         "summary": "Customer activated the 25GB monthly data package. Confirmed by SMS.",
         "unanswered_questions": [],
     },
@@ -69,6 +70,7 @@ SCENARIOS = {
             {"action": "lookup_ticket", "status": "ok"},
             {"action": "fetch_ticket_status", "status": "ok"},
         ],
+        "affected_number": "0812234871",   # Kandy landline the ticket is about
         "summary": "Customer chasing a fault ticket open for 5 days. Escalated to a retention agent.",
         "unanswered_questions": [
             "What compensation applies for an outage lasting over 24 hours?"
@@ -95,6 +97,7 @@ SCENARIOS = {
             {"action": "run_line_test", "status": "ok"},
             {"action": "raise_fault_ticket", "status": "ok", "ref": "FLT-902817"},
         ],
+        "affected_number": "0332248193",   # Gampaha landline — the affected line
         "summary": "Another Gampaha broadband outage report. Linked to the existing area incident.",
         "unanswered_questions": [],
     },
@@ -119,6 +122,7 @@ SCENARIOS = {
             {"action": "fetch_bill", "status": "ok"},
             {"action": "explain_charges", "status": "ok"},
         ],
+        "affected_number": None,   # account-level bill query
         "summary": "Customer queried a roaming charge on this month's bill. Explained in Tamil; customer satisfied.",
         "unanswered_questions": [],
     },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  INTENTS, fetchCallDetail, fetchCalls, fmtDuration, fmtInt, timeAgo,
+  INTENTS, fetchCallDetail, fetchCalls, fmtDuration, fmtInt, lineType, maskNumber, timeAgo,
   type CallDetail, type CallFilters, type CallRow,
 } from "../api";
 
@@ -82,6 +82,14 @@ function DetailDrawer({ callId, onClose }: { callId: string; onClose: () => void
               <div><span>CSAT</span><b>{detail.csat != null ? detail.csat.toFixed(1) : "—"}</b></div>
               {detail.district && <div><span>District</span><b>{detail.district}</b></div>}
               {detail.customer_segment && <div><span>Segment</span><b style={{ textTransform: "capitalize" }}>{detail.customer_segment}</b></div>}
+              {detail.affected_number && (
+                <div>
+                  <span>Affected line</span>
+                  <b className="tnum" title={lineType(detail.affected_number) ?? undefined}>
+                    {maskNumber(detail.affected_number)}
+                  </b>
+                </div>
+              )}
             </div>
 
             <div className="drawer-section">
@@ -214,6 +222,7 @@ export function CallHistory({ range }: { range: { from: string; to: string } }) 
                 <th>Time</th>
                 <th>Customer</th>
                 <th>Service</th>
+                <th>Affected line</th>
                 <th>Language</th>
                 <th>Duration</th>
                 <th>Outcome</th>
@@ -235,6 +244,11 @@ export function CallHistory({ range }: { range: { from: string; to: string } }) 
                     {r.churn_risk && <span className="risk-dot" title="Retention risk" />}
                   </td>
                   <td>{r.service}</td>
+                  <td className="tnum" title={lineType(r.affected_number) ?? undefined}>
+                    {r.affected_number
+                      ? maskNumber(r.affected_number)
+                      : <span className="csat-none">—</span>}
+                  </td>
                   <td>{r.language}</td>
                   <td className="tnum">{fmtDuration(r.duration_sec)}</td>
                   <td><Badge label={r.outcome} status={r.outcome_status} /></td>
@@ -245,7 +259,7 @@ export function CallHistory({ range }: { range: { from: string; to: string } }) 
               ))}
               {/* Sentinel drives infinite scroll. */}
               <tr ref={sentinel} className="ch-sentinel">
-                <td colSpan={9}>
+                <td colSpan={10}>
                   {loading ? "Loading…" : rows.length === 0 ? "No calls match these filters." :
                     doneRef.current ? `End of ${fmtInt(total)} calls` : ""}
                 </td>

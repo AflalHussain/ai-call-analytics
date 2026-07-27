@@ -239,7 +239,7 @@ async def list_calls(
         SELECT call_id, caller_hash, started_at, duration_sec, district,
                intent, sub_intent, language_primary, handled_by, resolved,
                escalation_reason, sentiment_start, sentiment_end, csat_predicted,
-               churn_risk
+               churn_risk, affected_number
         FROM calls
         WHERE {where_sql}
         ORDER BY started_at DESC
@@ -271,6 +271,7 @@ async def list_calls(
             "sentiment_status": se_status,
             "csat": r["csat_predicted"] if r["handled_by"] != "abandoned" else None,
             "churn_risk": r["churn_risk"],
+            "affected_number": r["affected_number"],
         })
 
     return {"total": total, "calls": calls, "limit": limit, "offset": offset}
@@ -279,7 +280,7 @@ async def list_calls(
 async def call_detail(call_id: str) -> dict[str, Any] | None:
     sql = """
         SELECT call_id, caller_hash, started_at, ended_at, duration_sec,
-               ai_handling_sec, district, customer_segment,
+               ai_handling_sec, district, customer_segment, affected_number,
                intent, sub_intent, topics, language_primary, language_mix,
                handled_by, resolved, escalation_reason, actions_taken,
                sentiment_start, sentiment_end, csat_predicted,
@@ -305,6 +306,7 @@ async def call_detail(call_id: str) -> dict[str, Any] | None:
         "service": INTENT_LABELS.get(row["intent"], row["intent"]),
         "district": row["district"],
         "customer_segment": row["customer_segment"],
+        "affected_number": row["affected_number"],
         "language": LANGUAGE_LABELS.get(row["language_primary"], row["language_primary"]),
         "languages": [LANGUAGE_LABELS.get(l, l) for l in (row["language_mix"] or [])],
         "outcome": oc_label,
