@@ -105,7 +105,7 @@ export default function App() {
         <div className="section-head">
           <h2>Needs attention now</h2>
           <span className="note">
-            Detected from call content against a 7-day baseline — no ticket required
+            Detected from call content against a 7-day baseline
           </span>
         </div>
         <div className="grid g-6">
