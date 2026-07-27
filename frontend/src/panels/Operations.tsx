@@ -132,8 +132,11 @@ export function Operations({
                   }}
                 />
               </div>
-              <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 4 }}>
-                {fmtInt(l.total)} calls · {l.containment_pct}% contained · CSAT {l.avg_csat.toFixed(2)}
+              <div
+                style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 4 }}
+                title="Est. CSAT is predicted from call content — sentiment and resolution. Not a customer survey."
+              >
+                {fmtInt(l.total)} calls · {l.containment_pct}% contained · est. CSAT {l.avg_csat.toFixed(2)}
               </div>
             </div>
           ))}

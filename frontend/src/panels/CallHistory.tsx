@@ -79,7 +79,10 @@ function DetailDrawer({ callId, onClose }: { callId: string; onClose: () => void
               <div><span>Outcome</span><Badge label={detail.outcome} status={detail.outcome_status} /></div>
               <div><span>Sentiment</span><Badge label={detail.sentiment} status={detail.sentiment_status} /></div>
               <div><span>Duration</span><b>{fmtDuration(detail.duration_sec)}</b></div>
-              <div><span>CSAT</span><b>{detail.csat != null ? detail.csat.toFixed(1) : "—"}</b></div>
+              <div>
+                <span title="Predicted from call content — sentiment and resolution. Not a customer survey.">Predicted CSAT</span>
+                <b>{detail.csat != null ? detail.csat.toFixed(1) : "—"}</b>
+              </div>
               {detail.district && <div><span>District</span><b>{detail.district}</b></div>}
               {detail.customer_segment && <div><span>Segment</span><b style={{ textTransform: "capitalize" }}>{detail.customer_segment}</b></div>}
               {detail.caller_number && (
@@ -245,7 +248,7 @@ export function CallHistory({ range }: { range: { from: string; to: string } }) 
                 <th>Duration</th>
                 <th>Outcome</th>
                 <th>Sentiment</th>
-                <th>CSAT</th>
+                <th title="Predicted from call content — sentiment and resolution. Not a customer survey.">Est. CSAT</th>
                 <th aria-label="Summary" />
               </tr>
             </thead>

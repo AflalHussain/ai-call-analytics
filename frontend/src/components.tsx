@@ -35,7 +35,7 @@ export function Card({
  * "is that good?" question on stage.
  */
 export function StatTile({
-  label, value, unit, spark, hero, wide, foot,
+  label, value, unit, spark, hero, wide, foot, hint,
 }: {
   label: string;
   value: string | number;
@@ -44,13 +44,14 @@ export function StatTile({
   hero?: boolean;
   wide?: boolean;
   foot?: ReactNode;
+  hint?: string;
 }) {
   const t = useTokens();
   const gid = `sp-${label.replace(/\W/g, "")}`;
 
   return (
     <div className={`card tile${hero ? " hero" : ""}${wide ? " span-2" : ""}`}>
-      <span className="label">{label}</span>
+      <span className="label" title={hint}>{label}</span>
       <div className="value">
         {value}
         {unit && <span className="unit">{unit}</span>}

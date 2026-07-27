@@ -45,6 +45,7 @@ export function ExecStrip({
 
       <StatTile
         label="Predicted CSAT"
+        hint="Predicted from call content — sentiment and resolution. Not a customer survey; covers 100% of calls."
         value={kpis.avg_csat.toFixed(2)}
         unit="/5"
         spark={spark("avg_csat")}
