@@ -54,7 +54,10 @@ def outcome_of(handled_by: str, resolved: bool) -> tuple[str, str]:
         return "Transferred", "neutral"
     if resolved:
         return "Resolved", "good"
-    return "Unresolved", "warning"
+    # Distinct from "Escalated" (warning): an escalation is a controlled handoff
+    # to a human; an unresolved AI call is a gap, so it gets the heavier "serious"
+    # tone (coral) — between warning and critical.
+    return "Unresolved", "serious"
 
 
 def sentiment_band(end: float | None) -> tuple[str, str]:

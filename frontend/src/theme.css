@@ -70,6 +70,8 @@
   --tag-warn-fg:    #8a5a00;
   --tag-crit-bg:    rgba(208, 59, 59, 0.11);
   --tag-crit-fg:    #a52121;
+  --tag-serious-bg: rgba(236, 131, 90, 0.18);
+  --tag-serious-fg: #9a3f1a;
   --tag-neutral-bg: #e6e5e0;
   --tag-neutral-fg: #52514e;
 
@@ -132,6 +134,8 @@
     --tag-warn-fg:    #f5c65e;
     --tag-crit-bg:    rgba(208, 59, 59, 0.16);
     --tag-crit-fg:    #ff9a9a;
+    --tag-serious-bg: rgba(236, 131, 90, 0.16);
+    --tag-serious-fg: #f2a582;
     --tag-neutral-bg: #25282d;
     --tag-neutral-fg: #b9bbc4;
 
@@ -184,6 +188,8 @@
   --tag-warn-fg:    #f5c65e;
   --tag-crit-bg:    rgba(208, 59, 59, 0.16);
   --tag-crit-fg:    #ff9a9a;
+  --tag-serious-bg: rgba(236, 131, 90, 0.16);
+  --tag-serious-fg: #f2a582;
   --tag-neutral-bg: #25282d;
   --tag-neutral-fg: #b9bbc4;
 
@@ -515,6 +521,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
 .badge.s-good     { background: var(--tag-ai-bg);   color: var(--tag-ai-fg); }
 .badge.s-warning  { background: var(--tag-warn-bg); color: var(--tag-warn-fg); }
 .badge.s-critical { background: var(--tag-crit-bg); color: var(--tag-crit-fg); }
+.badge.s-serious  { background: var(--tag-serious-bg); color: var(--tag-serious-fg); }
 .badge.s-neutral  { background: var(--tag-neutral-bg); color: var(--tag-neutral-fg); }
 
 /* ---------------------------------------------------------------- drawer -- */
