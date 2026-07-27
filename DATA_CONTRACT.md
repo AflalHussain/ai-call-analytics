@@ -28,6 +28,14 @@ One JSON object per completed call. Emitted after post-call enrichment finishes.
                                            // affected service line; null for account-level
                                            // calls. This IS the reported number (not the
                                            // caller's identity) — dashboard masks it on display.
+  "callback_number": "0771234567",         // number the caller agreed to be called back on;
+                                           // null when no callback was requested. Distinct
+                                           // from the affected line — shown in full in the
+                                           // summary drawer only, never on the table.
+  "caller_number": "0716620145",           // the caller's own incoming number (CLI); null if
+                                           // withheld. Raw caller identity — kept ALONGSIDE
+                                           // caller_hash, not replacing it. Masked in the
+                                           // summary drawer only, never on the table.
 
   // ---- what the call was about -------------------------------------------
   "intent": "broadband_fault",             // REQUIRED, from taxonomy §2
@@ -74,7 +82,7 @@ One JSON object per completed call. Emitted after post-call enrichment finishes.
 |---|---|---|
 | **Required** | `call_id`, `started_at`, `duration_sec`, `intent`, `language_primary`, `handled_by`, `resolved` | Dashboard breaks without these |
 | **Strongly wanted** | `sentiment_start`, `sentiment_end`, `escalation_reason`, `district`, `ai_handling_sec`, `topics` | Layers 2–3 degrade without these |
-| **Nice to have** | `churn_*`, `upsell_opportunity`, `unanswered_questions`, `actions_taken`, `csat_predicted`, `affected_number` | Layer 3 differentiators; render as "—" if absent |
+| **Nice to have** | `churn_*`, `upsell_opportunity`, `unanswered_questions`, `actions_taken`, `csat_predicted`, `affected_number`, `callback_number`, `caller_number` | Layer 3 differentiators; render as "—" if absent |
 
 > **`affected_number`** — the landline or mobile the AI agent asks the caller to
 > key in when reporting a line-specific fault (broadband, PEO TV, coverage, SIM).
@@ -83,6 +91,21 @@ One JSON object per completed call. Emitted after post-call enrichment finishes.
 > `caller_hash` (caller identity, always hashed). Send it in full; the dashboard
 > masks it at render (`071 ••• 5678`) so complete numbers never appear on a
 > shared screen — data minimisation is deliberate, not a limitation.
+>
+> **`callback_number`** — when a call can't be closed live, the agent offers a
+> callback and captures a number for it. Send that number here, or `null` if no
+> callback was requested. Unlike `affected_number` it is shown **in full** and
+> **only in the per-call summary drawer** (never the table): it is an action
+> item for a callback agent, so masking it would defeat the purpose, and keeping
+> it off the shared table limits exposure.
+>
+> **`caller_number`** — the caller's own incoming number (CLI/ANI), or `null`
+> when withheld. This is the one field that carries the caller's **raw personal
+> identity**, so it is sent **in addition to** `caller_hash` (which still drives
+> repeat-caller analytics and the `customer_ref` label), not as a replacement.
+> Shown **masked** (`071 ••• 5678`) in the summary drawer only, never on the
+> table. Treat it as sensitive PII and store/retain it per the client's data
+> policy — it is optional, and omitting it degrades nothing on the dashboard.
 
 Unknown values: send `null`, never omit the key, never invent a value. `intent` falls back to `"other"` — never to a guess.
 

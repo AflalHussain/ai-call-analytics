@@ -85,6 +85,7 @@ export interface CallDetail {
   call_id: string; customer_ref: string; short_id: string; started_at: string;
   duration_sec: number; service: string; district: string | null;
   customer_segment: string | null; affected_number: string | null;
+  callback_number: string | null; caller_number: string | null;
   language: string; languages: string[];
   outcome: string; outcome_status: string; sentiment: string; sentiment_status: string;
   sentiment_start: number | null; sentiment_end: number | null; csat: number | null;

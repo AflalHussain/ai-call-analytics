@@ -47,6 +47,8 @@ SCENARIOS = {
             {"action": "activate_package", "status": "ok"},
         ],
         "affected_number": None,   # account-level — no single line
+        "callback_number": None,   # resolved live — no callback needed
+        "caller_number": "0716620145",   # incoming CLI
         "summary": "Customer activated the 25GB monthly data package. Confirmed by SMS.",
         "unanswered_questions": [],
     },
@@ -71,6 +73,8 @@ SCENARIOS = {
             {"action": "fetch_ticket_status", "status": "ok"},
         ],
         "affected_number": "0812234871",   # Kandy landline the ticket is about
+        "callback_number": "0771234567",   # caller asked to be called back
+        "caller_number": "0771234567",     # calling from their mobile (same as callback)
         "summary": "Customer chasing a fault ticket open for 5 days. Escalated to a retention agent.",
         "unanswered_questions": [
             "What compensation applies for an outage lasting over 24 hours?"
@@ -98,6 +102,8 @@ SCENARIOS = {
             {"action": "raise_fault_ticket", "status": "ok", "ref": "FLT-902817"},
         ],
         "affected_number": "0332248193",   # Gampaha landline — the affected line
+        "callback_number": "0762889104",   # caller wants an update once restored
+        "caller_number": "0761100338",     # calling from a mobile (landline is down)
         "summary": "Another Gampaha broadband outage report. Linked to the existing area incident.",
         "unanswered_questions": [],
     },
@@ -123,6 +129,8 @@ SCENARIOS = {
             {"action": "explain_charges", "status": "ok"},
         ],
         "affected_number": None,   # account-level bill query
+        "callback_number": None,   # resolved live — no callback needed
+        "caller_number": "0212234517",   # calling from a Jaffna landline
         "summary": "Customer queried a roaming charge on this month's bill. Explained in Tamil; customer satisfied.",
         "unanswered_questions": [],
     },

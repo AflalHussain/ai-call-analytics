@@ -36,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app import db, ingest  # noqa: E402
 from app.models import Action, CallRecord  # noqa: E402
-from app.phone import affected_number  # noqa: E402
+from app.phone import affected_number, callback_number, caller_number_from_id  # noqa: E402
 
 TZ = ZoneInfo("Asia/Colombo")
 
@@ -385,7 +385,10 @@ def _make_call(
             weights=[52, 26, 18, 4], k=1
         )[0],
         channel="voice_inbound",
+        # ~3% of inbound calls withhold CLI; otherwise a stable number per caller.
+        caller_number=None if rng.random() < 0.03 else caller_number_from_id(cid),
         affected_number=affected_number(intent, district, rng),
+        callback_number=callback_number(handled_by, resolved, churn_risk, rng),
         intent=intent,
         sub_intent=None,
         topics=topics,
@@ -471,6 +474,9 @@ def build(days: int, per_day: int, seed: int) -> list[CallRecord]:
             followup_of=c.call_id,
         )
         f.caller_hash = c.caller_hash  # the whole point
+        # Keep the incoming CLI consistent with the copied caller identity —
+        # otherwise the same caller would show a different number on the callback.
+        f.caller_number = c.caller_number
         followups.append(f)
     calls.extend(followups)
 

@@ -19,7 +19,7 @@ INSERT INTO calls (
     sentiment_start, sentiment_end, csat_predicted, interruptions, silence_ratio,
     churn_risk, churn_signals, upsell_opportunity, unanswered_questions,
     summary, enrichment_model, enrichment_confidence, schema_version,
-    affected_number
+    affected_number, callback_number, caller_number
 ) VALUES (
     $1,$2,$3,$4,$5,$6,
     $7,$8,$9,$10,
@@ -28,7 +28,7 @@ INSERT INTO calls (
     $20,$21,$22,$23,$24,
     $25,$26,$27,$28,
     $29,$30,$31,$32,
-    $33
+    $33,$34,$35
 )
 ON CONFLICT (call_id) DO UPDATE SET
     started_at = EXCLUDED.started_at,
@@ -63,6 +63,8 @@ ON CONFLICT (call_id) DO UPDATE SET
     enrichment_confidence = EXCLUDED.enrichment_confidence,
     schema_version = EXCLUDED.schema_version,
     affected_number = EXCLUDED.affected_number,
+    callback_number = EXCLUDED.callback_number,
+    caller_number = EXCLUDED.caller_number,
     ingested_at = now();
 """
 
@@ -84,7 +86,7 @@ def _row(c: CallRecord) -> tuple:
         c.churn_risk, c.churn_signals, c.upsell_opportunity,
         c.unanswered_questions,
         c.summary, c.enrichment_model, c.enrichment_confidence, c.schema_version,
-        c.affected_number,
+        c.affected_number, c.callback_number, c.caller_number,
     )
 
 

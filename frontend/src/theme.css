@@ -583,6 +583,18 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
   font-size: 13px; font-weight: 600;
 }
 
+/* Callback is an action item, not an alarm — neutral surface with a blue
+   accent reads as "info / to do", not the red retention warning below it. */
+.drawer-callback {
+  margin-top: 22px; padding: 11px 13px; border-radius: var(--radius-sm);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--series-1);
+}
+.drawer-callback .cb-head { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+.drawer-callback .cb-num { font-size: 16px; font-weight: 600; letter-spacing: 0.02em; color: var(--text-primary); }
+.drawer-callback .cb-type { font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: 500; }
+
 @media (max-width: 720px) {
   .ch-controls select { flex: 1; min-width: 0; }
   .drawer-meta { grid-template-columns: 1fr; }

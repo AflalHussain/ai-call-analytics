@@ -184,6 +184,31 @@ def derive_key_points(row: dict[str, Any]) -> list[str]:
 # Queries
 # --------------------------------------------------------------------------
 
+# SQL that reproduces customer_ref() (the app-side sha1 of the hashed-MSISDN
+# tail) so the C-NNNNN label shown in the table is searchable. Verified to match
+# the Python derivation exactly. Needs the pgcrypto extension (see schema.sql).
+_CUSTOMER_REF_SQL = (
+    "'C-' || lpad((('x' || substr("
+    "encode(digest(split_part(caller_hash, ':', 2), 'sha1'), 'hex'), 1, 6)"
+    ")::bit(24)::bigint % 100000)::text, 5, '0')"
+)
+
+# Free-text search matches any of the fields a user can actually see or hold —
+# the customer ref, district, service, the numbers, and summary text — not just
+# the opaque call_id. Every `$$` binds to the same search parameter.
+_SEARCH_SQL = f"""(
+        call_id ILIKE '%' || $$ || '%'
+     OR coalesce(district, '')          ILIKE '%' || $$ || '%'
+     OR coalesce(intent, '')            ILIKE '%' || $$ || '%'
+     OR coalesce(sub_intent, '')        ILIKE '%' || $$ || '%'
+     OR coalesce(summary, '')           ILIKE '%' || $$ || '%'
+     OR coalesce(affected_number, '')   ILIKE '%' || $$ || '%'
+     OR coalesce(caller_number, '')     ILIKE '%' || $$ || '%'
+     OR coalesce(callback_number, '')   ILIKE '%' || $$ || '%'
+     OR ({_CUSTOMER_REF_SQL})           ILIKE '%' || $$ || '%'
+    )"""
+
+
 def _outcome_clause(value: str) -> str:
     return {
         "resolved": "handled_by = 'ai' AND resolved",
@@ -222,7 +247,7 @@ async def list_calls(
         where.append(clause.replace("$$", f"${len(params)}"))
 
     if search:
-        add("call_id ILIKE '%' || $$ || '%'", search)
+        add(_SEARCH_SQL, search)
     if language:
         add("language_primary = $$", language)
     if service:
@@ -281,6 +306,7 @@ async def call_detail(call_id: str) -> dict[str, Any] | None:
     sql = """
         SELECT call_id, caller_hash, started_at, ended_at, duration_sec,
                ai_handling_sec, district, customer_segment, affected_number,
+               callback_number, caller_number,
                intent, sub_intent, topics, language_primary, language_mix,
                handled_by, resolved, escalation_reason, actions_taken,
                sentiment_start, sentiment_end, csat_predicted,
@@ -307,6 +333,8 @@ async def call_detail(call_id: str) -> dict[str, Any] | None:
         "district": row["district"],
         "customer_segment": row["customer_segment"],
         "affected_number": row["affected_number"],
+        "callback_number": row["callback_number"],
+        "caller_number": row["caller_number"],
         "language": LANGUAGE_LABELS.get(row["language_primary"], row["language_primary"]),
         "languages": [LANGUAGE_LABELS.get(l, l) for l in (row["language_mix"] or [])],
         "outcome": oc_label,

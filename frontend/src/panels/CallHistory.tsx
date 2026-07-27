@@ -82,6 +82,14 @@ function DetailDrawer({ callId, onClose }: { callId: string; onClose: () => void
               <div><span>CSAT</span><b>{detail.csat != null ? detail.csat.toFixed(1) : "—"}</b></div>
               {detail.district && <div><span>District</span><b>{detail.district}</b></div>}
               {detail.customer_segment && <div><span>Segment</span><b style={{ textTransform: "capitalize" }}>{detail.customer_segment}</b></div>}
+              {detail.caller_number && (
+                <div>
+                  <span>Caller number</span>
+                  <b className="tnum" title={lineType(detail.caller_number) ?? undefined}>
+                    {maskNumber(detail.caller_number)}
+                  </b>
+                </div>
+              )}
               {detail.affected_number && (
                 <div>
                   <span>Affected line</span>
@@ -103,6 +111,16 @@ function DetailDrawer({ callId, onClose }: { callId: string; onClose: () => void
                 <ul className="keypoints">
                   {detail.key_points.map((k, i) => <li key={i}>{k}</li>)}
                 </ul>
+              </div>
+            )}
+
+            {detail.callback_number && (
+              <div className="drawer-callback">
+                <span className="cb-head">☎ Callback requested</span>
+                <span className="cb-num tnum">
+                  {detail.callback_number}
+                  <span className="cb-type">{lineType(detail.callback_number)}</span>
+                </span>
               </div>
             )}
 
@@ -195,7 +213,7 @@ export function CallHistory({ range }: { range: { from: string; to: string } }) 
       <div className="ch-controls">
         <input
           className="ch-search"
-          placeholder="Search by call ID…"
+          placeholder="Search ref, district, number, keyword…"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />

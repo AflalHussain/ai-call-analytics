@@ -1,6 +1,9 @@
 -- Call Agent Dashboard schema.
 -- Mirrors DATA_CONTRACT.md v0.1. Safe to re-run.
 
+-- digest() for the searchable customer-ref expression in app/calls.py.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS calls (
     call_id               TEXT PRIMARY KEY,
 
@@ -19,6 +22,12 @@ CREATE TABLE IF NOT EXISTS calls (
     -- affected service line the caller keyed in (landline/mobile), or NULL for
     -- account-level calls. Stored in full; the dashboard masks it at render.
     affected_number       TEXT,
+    -- number the caller agreed to be called back on, or NULL if no callback was
+    -- requested. Shown in full in the summary drawer only, never on the table.
+    callback_number       TEXT,
+    -- caller's own incoming number (CLI), or NULL if withheld. Raw caller
+    -- identity, kept alongside caller_hash; masked in the drawer, never on table.
+    caller_number         TEXT,
 
     -- subject
     intent                TEXT        NOT NULL,
@@ -56,6 +65,8 @@ CREATE TABLE IF NOT EXISTS calls (
 
 -- Idempotent for databases created before affected_number existed.
 ALTER TABLE calls ADD COLUMN IF NOT EXISTS affected_number TEXT;
+ALTER TABLE calls ADD COLUMN IF NOT EXISTS callback_number TEXT;
+ALTER TABLE calls ADD COLUMN IF NOT EXISTS caller_number TEXT;
 
 CREATE INDEX IF NOT EXISTS calls_started_at_idx    ON calls (started_at DESC);
 CREATE INDEX IF NOT EXISTS calls_intent_idx        ON calls (intent);

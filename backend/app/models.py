@@ -132,6 +132,12 @@ class CallRecord(BaseModel):
     # The landline/mobile the caller keyed in as the affected service line.
     # Null for account-level calls (billing, general info) — see DATA_CONTRACT §1.
     affected_number: str | None = None
+    # The number the caller agreed to be called back on. Null when no callback
+    # was requested. Distinct from the affected line — see DATA_CONTRACT §1.
+    callback_number: str | None = None
+    # The caller's own incoming number (CLI). Null when withheld. Raw caller
+    # identity, kept alongside caller_hash — masked in the drawer. DATA_CONTRACT §1.
+    caller_number: str | None = None
 
     intent: Intent
     sub_intent: str | None = None
